@@ -1,0 +1,18 @@
+*.log
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+env
+
+.git/
+.gitignore
+.dockerignore
+.cache
+docker-compose.override.yml
+
+#ignore secrets
+srcs/*.env
+
+
