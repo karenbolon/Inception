@@ -37,10 +37,11 @@
 .txt
 *.key
 *.crt
-srcs/requirements/nginx/ssl/nginx_cert.crt
-srcs/requirements/nginx/ssl/nginx_cert.key
+secrets/nginx_cert.crt
+secrets/nginx_cert.key
 
 #
 database/
 web/
 certs/
+secrets/

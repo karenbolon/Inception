@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#check if socket directory exists with correct permissions
+mkdir -p /run/mysqld/
+chown mysql:mysql /run/mysqld/
+chmod 755 /run/mysqld/
+
 #creating MYSQL init script
 echo "CREATE DATABASE IF NOT EXISTS \'${MYSQL_DATABASE_NAME}\';" > /etc/mysql/init.sql
 
