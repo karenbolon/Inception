@@ -3,72 +3,74 @@ version: '3.8'
 
 services:
   nginx:
-    container_name: nginx
     build:
       context: ./requirements/nginx
     env_file: .env
     depends_on:
       - wordpress
+      - mariadb
     ports:
-      - "443:443"
+      - 443:443
     volumes:
-      - wordpress:/var/www/html/wordpress
-    restart: always
+      - ./web:/var/www/html
+    restart: unless-stopped
     networks:
       inception:
+    extra_hosts:
+      - "kbolon.42.fr:127.0.0.1"
 
   mariadb:
-    container_name: mariadb
     build:
       context: ./requirements/mariadb
+    secrets:
+      - db_password
+      - db_root_password
     restart: unless-stopped
     env_file: .env
-#    environment:
-#      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-#      DB_PASSWORD: ${DB_PASSWORD}
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
     volumes:
-      - mariadb:/var/lib/mysql
+      - ./database:/var/lib/mysql
     networks:
       inception:
-#    ports:
-#     - 3306:3306
+    ports:
+     - 3306:3306
 
   wordpress:
-    container_name: wordpress
     build:
       context: ./requirements/wordpress
-    depends_on:
-      - mariadb
-    restart: always
-#    ports:
-#      - 9000:9000
+    secrets:
+      - db_password
+      - wp_admin_password
+      - wp_user_password
+    restart: unless-stopped
+    ports:
+      - 9000:9000
     env_file: .env
-#    environment:
-#      DB_PASSWORD: ${DB_PASSWORD}
-#      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD}
-#      WP_USER_PASSWORD: ${WP_USER_PASSWORD}
+    environment:
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      WORDPRESS_ADMIN_PASSWORD: /run/secrets/wp_admin_password
+      WORDPRESS_USER_PASSWORD: /run/secrets/wp_user_password
     volumes:
-      - wordpress:/var/www/html/wordpress
+      - ./web:/var/www/html
     networks:
       inception:
 
-volumes:
-  wordpress:
-    name: wordpress
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/kbolon/data/wordpress
-  mariadb:
-    name: mariadb
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: /home/kbolon/data/mariadb
+#secrets are already loaded in docker swarm
+secrets:
+  db_root_password:
+    external: true
+  db_password:
+    external: true
+  wp_admin_password:
+    external: true
+  wp_user_password:
+    external: true
 
 networks:
   inception:
-    name: inception
+    driver: bridge
+
+
 

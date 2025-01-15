@@ -1,26 +1,22 @@
 FROM debian:bullseye
 
 #install nginx and openssl for TLS
-RUN apt update && apt upgrade -y
-RUN	apt install -y nginx openssl
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt update && apt upgrade -y && \
+	apt install -y nginx openssl \
+	&& rm -rf /var/lib/apt/lists/*
 
-#copy nginx configuration
-COPY conf/nginx.conf /etc/nginx/sites-available/default
-#COPY tools/index.html /usr/share/nginx/html
+#copy nginx configuration from host machine to docker container
+COPY conf/nginx.conf /etc/nginx/nginx.conf
 
-RUN openssl req -x509 -days 365 -nodes -newkey rsa:2048 \
-	-keyout /etc/ssl/certs/nginx.key \
-	-out /etc/ssl/certs/nginx.crt -sha256 -subj "/CN=kbolon.42.fr"
+#TSL
+RUN mkdir -p /etc/nginx/ssl
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/CN=kbolon.42.fr"
 
-#RUN mkdir -p /etc/nginx/ssl
-#RUN openssl req -x509 -nodes -days 365 -out /etc/nginx/ssl/nginx_inception.crt -keyout /etc/nginx/ssl/nginx_inception.key -subj "/CN=kbolon.42.fr"
-#RUN openssl req -x509 -nodes -days 365 -out /etc/nginx/ssl/inception.crt       -keyout /etc/nginx/ssl/inception.key       -subj "/CN=localhost/UID=login"
+#for for HTTP & HTTPS to allow external connections (TLS)
+EXPOSE 443
 
-#for TLS (HTTPS) use port 443 and 80
-#EXPOSE 443
+#ENV DOMAIN_NAME=$DOMAIN_NAME
 
 #start NGINX in the foreground, daemon off so container 
 #doesn't exit abruptly when powered on
 CMD  ["nginx", "-g", "daemon off;"]
-
