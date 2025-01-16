@@ -1,49 +1,23 @@
 SECRETS_DIR = ./secrets
-STACK_NAME = karens
-COMPOSE_FILE := srcs/docker-compose.yml
+COMPOSE_FILE = srcs/docker-compose.yml
+INIT_SCRIPT = /srcs/init.sh
+DATA_DIR = ../../data
+ENV_FILE = ./srcs/.env
 
-#Initialise Docker Swarm, create secrets, and deploy stack
-all: create-secrets volume_directories up
+all: up
 
 #/dev/null is a special file on linux systems that discards anything written to it
 # 2>&1 redirects file descripter 2 (standard error) to FD1 or (stdout) to /dev/null too
 
-#Create Docker Secrets
-create-secrets:
-	@echo "Creating Docker Secrets"
-	@if ! docker secret inspect credentials > /dev/null 2>&1; then \
-		docker secret create credentials $(SECRETS_DIR)/credentials.txt; \
-	else \
-		echo "Secret 'credentials' already exists."; \
-	fi
+#-p flag creates a parent DIR if needed & avoids errors if it exists
+make_directories:
+	@mkdir -p /home/kbolon/data/mariadb
+	@mkdir -p /home/kbolon/data/wordpress
+	@mkdir -p "/home/kbolon/Documents/Inception/secrets"
+	@mkdir -m 775 secrets
 
-	@if ! docker secret inspect db_password > /dev/null 2>&1; then \
-		docker secret create db_password $(SECRETS_DIR)/db_password.txt; \
-	else \
-		echo "Secret 'db_password' already exists."; \
-	fi
-
-	@if ! docker secret inspect db_root_password > /dev/null 2>&1; then \
-		docker secret create db_root_password $(SECRETS_DIR)/db_root_password.txt; \
-	else \
-		echo "Secret 'db_root_password' already exists."; \
-	fi
-
-	@if ! docker secret inspect wp_admin_password > /dev/null 2>&1; then \
-		docker secret create wp_admin_password $(SECRETS_DIR)/wp_admin_password.txt; \
-	else \
-		echo "Secret 'wp_admin_password' already exists."; \
-	fi
-	
-	@if ! docker secret inspect wp_user_password > /dev/null 2>&1; then \
-		docker secret create wp_user_password $(SECRETS_DIR)/wp_user_password.txt; \
-	else \
-		echo "Secret 'wp_user_password' already exists."; \
-	fi
-
-#volume_directories:
-#	@mkdir -p /home/kbolon/data/mariadb
-#	@mkdir -p /home/kbolon/data/wordpress
+init:
+	@$(INIT_SCRIPT)
 
 #Docker compose
 up:
@@ -62,21 +36,23 @@ restart:
 ps:
 	@docker compose -f $(COMPOSE_FILE) ps
 
-delete-secrets:
-	@if [-d $(SECRETS_DIR)]; then \
-		rm -f $(SECRETS_DIR); \
-		echo "Secrets have been deleted"; \
-	fi	
+status:
+	@docker images
+	@docker ps -a
+	@docker network ls
+	@if [ ! -f $(ENV_FILE) ]; then touch $(ENV_FILE); fi
+	@docker compose -f $(COMPOSE_FILE) logs
 
 re:
 	down clean up
 
 clean:
 	@echo "Cleaning"
-#	@docker stack rm $(STACK_NAME) || echo "Stack is not running"
-#stops and removes all containers defined in yaml file and any orphans
 	@docker-compose -f $(COMPOSE_FILE) down --volumes --remove-orphans || echo "compose is not running"
-#provides a deep clean
 	@docker system prune -f volumes
+#	|| prevents errors in makefile, means execute RH CMD if LH CMD fails
+	@rm -fr $(SECRETS_DIR) || true
+	@rm -fr $(DATA_DIR) || true
+	@rm -fr $(ENV_FILE) || true
 
-.PHONY: all create-secrets delete-secrets volume_directories up down stop restart ps re clean
+.PHONY: all up down stop restart ps re status clean

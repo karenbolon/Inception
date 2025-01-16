@@ -1,8 +1,8 @@
 FROM debian:bullseye
 
-#removes the var directory to reduce image size
+#procps is for process control
 RUN apt update && apt upgrade -y && \
-	apt install -y mariadb-server && \
+	apt install -y mariadb-server procps && \
 	rm -rf /var/lib/apt/lists/*
 
 #default port for MariaDB
@@ -18,6 +18,6 @@ RUN chmod +x /usr/local/bin/mariadb_script.sh
 #ENTRYPOINT ["bash", "/usr/local/bin/entrypoint.sh" ]
 
 #start MariaDB in the foreground
-CMD ["/usr/local/bin/mariadb_script.sh"]
+ENTRYPOINT ["/usr/local/bin/mariadb_script.sh"]
 
 

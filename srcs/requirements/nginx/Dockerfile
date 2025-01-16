@@ -7,10 +7,8 @@ RUN apt update && apt upgrade -y && \
 
 #copy nginx configuration from host machine to docker container
 COPY conf/nginx.conf /etc/nginx/nginx.conf
-
-#TSL
-RUN mkdir -p /etc/nginx/ssl
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj "/CN=kbolon.42.fr"
+COPY secrets/nginx.key /etc/nginx/ssl/nginx.key
+COPY secrets/nginx.crt /etc/nginx/ssl/nginx.crt
 
 #for for HTTP & HTTPS to allow external connections (TLS)
 EXPOSE 443
