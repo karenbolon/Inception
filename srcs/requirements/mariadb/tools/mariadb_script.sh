@@ -9,7 +9,8 @@ setup_socket() {
 
 #wait for DB to start
 wait_for_mdb() {
-	mysqld_safe --datadir='var/lib/mysql' &
+	mysqld_safe --datadir='/var/lib/mysql' &
+	sleep 2 #give time for mysqld to start
 	until mysqladmin ping -uroot -p "$(cat "$DB_ROOT_PW")" --silent; do
 		sleep 1
 	done
@@ -17,17 +18,17 @@ wait_for_mdb() {
 
 #initialise DB if it doesn't exist
 #-e: execute
-init_database {
-	if ! mysql -uroot -p"$(cat "DB_ROOT_PW")" -e "SHOW DATABASES LIKE '$DB_NAME'" | grep -q "$DB_NAME"; then
-		mysql -uroot -p$(cat "$DB_ROOT_PW")" <<-EOSQL ||  { echo 'Failed to initialize database.' >> /var/log/mariadb_env_vars.log; exit 1; }
- 			CREATE DATABASE IF NOT EXISTS \'$DB_NAME\';
-			CREATE USER IF NOT EXISTS \'$(DB_USER)'@'%' IDENTIFIED BY '$(cat $DB_PASSWORD)';" >> /etc/mysql/init.sql
-			GRANT ALL PRIVILEGES ON \'$(DB_NAME)\'.* TO '${DB_USER}'@'%';
+init_database() {
+	if ! mysql -uroot -p"$(cat "$DB_ROOT_PW")" -e "SHOW DATABASES LIKE '$DB_NAME'" | grep -q "$DB_NAME"; then
+		mysql -uroot -p"$(cat "$DB_ROOT_PW")" <<-EOSQL ||  { echo 'Failed to initialize database.' >> /var/log/mariadb_env_vars.log; exit 1; }
+ 			CREATE DATABASE IF NOT EXISTS $DB_NAME;
+			CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY $(cat "$DB_PASSWORD");
+			GRANT ALL PRIVILEGES ON $DB_NAME.* TO '${DB_USER}'@'%';
 			FLUSH PRIVILEGES;
 		EOSQL
-		echo "DB and user created" >> /var/lost/mariadb_env_vars.log
+		echo "DB and user created" >> /var/log/mariadb_env_vars.log
 	else
-		echo "DB already exists" >> /var/lost/mariadb_env_vars.log
+		echo "DB already exists" >> /var/log/mariadb_env_vars.log
 	fi
 }
 

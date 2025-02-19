@@ -1,10 +1,16 @@
 SECRETS_DIR = ./secrets
 COMPOSE_FILE = srcs/docker-compose.yml
-INIT_SCRIPT = /srcs/init.sh
+INIT_SCRIPT = ./srcs/init.sh
 DATA_DIR = ../../data
+
+srcs/.env:
+	@echo "Creating .env file..."
+	@bash ./srcs/init.sh
+	@echo ".env file created successfully!"
+
 ENV_FILE = ./srcs/.env
 
-all: up
+all: srcs/.env up
 
 #/dev/null is a special file on linux systems that discards anything written to it
 # 2>&1 redirects file descripter 2 (standard error) to FD1 or (stdout) to /dev/null too
@@ -40,7 +46,7 @@ status:
 	@docker images
 	@docker ps -a
 	@docker network ls
-	@if [ ! -f $(ENV_FILE) ]; then touch $(ENV_FILE); fi
+#	@if [ ! -f $(ENV_FILE) ]; then touch $(ENV_FILE); fi
 	@docker compose -f $(COMPOSE_FILE) logs
 
 re:
@@ -48,7 +54,7 @@ re:
 
 clean:
 	@echo "Cleaning"
-	@docker-compose -f $(COMPOSE_FILE) down --volumes --remove-orphans || echo "compose is not running"
+	@docker compose -f $(COMPOSE_FILE) down --volumes --remove-orphans || echo "compose is not running"
 	@docker system prune -f volumes
 #	|| prevents errors in makefile, means execute RH CMD if LH CMD fails
 	@rm -fr $(SECRETS_DIR) || true

@@ -37,7 +37,7 @@ WP_ADMIN_NAME=kbolon
 WP_ADMIN_EMAIL=kbolon@student.42berlin.de
 WP_USER_NAME=user
 WP_USER_EMAIL=user@gmail.com
-WP_USER_ROLE=autoer
+WP_USER_ROLE=auther
 EOF
 
 echo ".env file has been created"
