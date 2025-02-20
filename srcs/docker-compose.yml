@@ -1,12 +1,12 @@
-#specifies the Docker Compose file format version
-version: '3.8'
-
 services:
   nginx:
     build:
       context: /home/kbolon/Documents/Inception_working
       dockerfile: srcs/requirements/nginx/Dockerfile
     env_file: .env
+#    secrets:
+#      - key
+#      - cert
     depends_on:
       - wordpress
       - mariadb
@@ -24,13 +24,13 @@ services:
     build:
       context: ./requirements/mariadb
     secrets:
-      - db_password
+      - db_user_password
       - db_root_password
     restart: unless-stopped
     env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_user_password
     volumes:
       - ./database:/var/lib/mysql
     networks:
@@ -42,7 +42,7 @@ services:
     build:
       context: ./requirements/wordpress
     secrets:
-      - db_password
+      - db_user_password
       - wp_admin_password
       - wp_user_password
     restart: unless-stopped
@@ -50,8 +50,8 @@ services:
       - 9000:9000
     env_file: .env
     environment:
-      MYSQL_PASSWORD_FILE: /run/secrets/db_password
-      WORDPRESS_ADMIN_PASSWORD: /run/secrets/wp_admin_password
+      MYSQL_PASSWORD_FILE: /run/secrets/db_user_password
+      WORDPRESS_ADMIN_PASSWORD: /run/secrets/wp_root_password
       WORDPRESS_USER_PASSWORD: /run/secrets/wp_user_password
     volumes:
       - ./web:/var/www/html
@@ -61,13 +61,13 @@ services:
 #secrets are already loaded in docker swarm
 secrets:
   db_root_password:
-    external: true
-  db_password:
-    external: true
+    file: ../secrets/db_root_password.txt
+  db_user_password:
+    file: ../secrets/db_user_password.txt
   wp_admin_password:
-    external: true
+    file: ../secrets/wp_root_password.txt
   wp_user_password:
-    external: true
+    file: ../secrets/wp_user_password.txt
 
 networks:
   inception:

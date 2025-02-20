@@ -5,12 +5,58 @@ generate_password() {
 	openssl rand -base64 8
 }
 
+#create directories
+if [ ! -d "secrets" ]; then
+	mkdir -p "/home/kbolon/Documents/Inception/secrets"
+	chmod -m 775 secrets
+	echo "secrets folder created"
+echo
+	"secrets folder already exists"
+fi
+
+if [ ! -d "/home/kbolon/data/mariadb" ]; then
+	mkdir -p "/home/kbolon/data/mariadb"
+	echo "mariadb folder created"
+echo
+	"mariadb folder already exists"
+fi
+
+if [ ! -d "/home/kbolon/data/wordpress" ]; then
+	mkdir -p "/home/kbolon/data/wordpress"
+	echo "wordpress folder created"
+echo
+	"wordpress folder already exists"
+fi
+
 #create passwords for WordPress and MariaDB
-generate_password > secrets/wp_user_password.txt
-generate_password > secrets/wp_root_password.txt
-generate_password > secrets/db_user_password.txt
-generate_password > secrets/db_root_password.txt
-echo "Secrets and passwords created"
+if [ ! -f "secrets/wp_user_password.txt" ]; then
+	generate_password > secrets/wp_user_password.txt
+	echo "wp_user_password created"
+else
+	echo "wp_user_password already exists"
+fi
+
+if [ ! -f "secrets/wp_root_password.txt" ]; then
+	generate_password > secrets/wp_root_password.txt
+	echo "wp_root_password created"
+else
+	echo "wp_root_password already exists"
+fi
+
+if [ ! -f "secrets/db_user_password.txt" ]; then
+	generate_password > secrets/db_user_password.txt
+	echo "db_user_password created"
+else
+	echo "db_user_password already exists"
+fi
+
+if [ ! -f "secrets/db_root_password.txt" ]; then
+	generate_password > secrets/db_root_password.txt
+	echo "db_root_password created"
+else
+	echo "db_root_password already exists"
+fi
+
 
 #create ssl certificates if not created
 if [ ! -f "secrets/nginx.crt" ] || [ ! -f "secrets/nginx.key" ]; then

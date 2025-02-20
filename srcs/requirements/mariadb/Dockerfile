@@ -14,9 +14,6 @@ COPY tools/mariadb_script.sh /usr/local/bin/mariadb_script.sh
 
 RUN chmod +x /usr/local/bin/mariadb_script.sh
 
-#Start MariaDB with init file
-#ENTRYPOINT ["bash", "/usr/local/bin/entrypoint.sh" ]
-
 #start MariaDB in the foreground
 ENTRYPOINT ["/usr/local/bin/mariadb_script.sh"]
 

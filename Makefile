@@ -2,15 +2,9 @@ SECRETS_DIR = ./secrets
 COMPOSE_FILE = srcs/docker-compose.yml
 INIT_SCRIPT = ./srcs/init.sh
 DATA_DIR = ../../data
-
-srcs/.env:
-	@echo "Creating .env file..."
-	@bash ./srcs/init.sh
-	@echo ".env file created successfully!"
-
 ENV_FILE = ./srcs/.env
 
-all: srcs/.env up
+all: init up
 
 #/dev/null is a special file on linux systems that discards anything written to it
 # 2>&1 redirects file descripter 2 (standard error) to FD1 or (stdout) to /dev/null too
@@ -23,7 +17,9 @@ make_directories:
 	@mkdir -m 775 secrets
 
 init:
-	@$(INIT_SCRIPT)
+	@echo "Creating .env file..."
+	@bash $(INIT_SCRIPT)
+	@echo ".env file created successfully!"
 
 #Docker compose
 up:

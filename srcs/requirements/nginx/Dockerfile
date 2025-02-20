@@ -6,7 +6,7 @@ RUN apt update && apt upgrade -y && \
 	&& rm -rf /var/lib/apt/lists/*
 
 #copy nginx configuration from host machine to docker container
-COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY srcs/requirements/nginx/conf/nginx.conf /etc/nginx/nginx.conf
 COPY secrets/nginx.key /etc/nginx/ssl/nginx.key
 COPY secrets/nginx.crt /etc/nginx/ssl/nginx.crt
 
