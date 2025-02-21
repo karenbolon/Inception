@@ -4,7 +4,7 @@ RUN mkdir -p /var/www/wordpress
 
 #install nginx and openssl for TLS
 RUN apt update && apt upgrade -y && \
-	apt install -y php-fpm php-mysql curl && \
+	apt install -y php-fpm php-mysql curl mariadb-client && \
 	rm -rf /var/lib/apt/lists/*
 
 COPY ./tools/wp_script.sh /usr/local/bin/

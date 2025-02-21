@@ -12,6 +12,6 @@ env
 docker-compose.override.yml
 
 #ignore secrets
-srcs/*.env
+*.env
 
 

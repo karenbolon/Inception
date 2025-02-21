@@ -7,7 +7,7 @@ DATA_DIR = "/Users/karenbolon/data"
 
 COMPOSE_FILE = srcs/docker-compose.yml
 INIT_SCRIPT = ./srcs/init.sh
-ENV_FILE = ./srcs/.env
+ENV_FILE = .env
 
 all: init up
 
