@@ -15,15 +15,17 @@
 # * Basic Settings
 #
 
-#user                    = root
 #basedir                 = /usr
 #tmpdir                  = /tmp
-user					= mysql
+
+user                    = mysql
 pid-file                = /run/mysqld/mysqld.pid
 datadir                 = /var/lib/mysql
 socket					= /run/mysqld/mysqld.sock
 bind_address			= 0.0.0.0
 port					= 3306
+log_error				= /var/log/mariadb.log
+syslog					= 1
 
 
 # Broken reverse DNS slows down connections considerably and name resolve is
