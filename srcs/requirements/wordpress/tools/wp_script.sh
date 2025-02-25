@@ -1,5 +1,8 @@
 #!/bin/bash
 
+RED='\033[31m' #'\e[31m'
+RESET='\033[0m' #'\e[0m'
+
 # Ensure wp-cli is installed
 if ! command -v wp &>/dev/null; then
 	curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar || { echo "ERROR: wp-cli download failed"; exit 1; }
@@ -10,13 +13,17 @@ fi
 # Set working directory
 cd /var/www/html || { echo "ERROR: /var/www/html not found"; exit 1; }
 
+# Fix ownership issues (important)
+chown -R www-data:www-data /var/www/html
+chmod -R 755 /var/www/html
+
 # Read secrets from files
 DB_PASSWORD=$(cat /run/secrets/db_user_password)
 WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
 WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password)
 
 # Validate required environment variables
-VARIABLES=("DB_HOST" "DB_NAME" "DB_USER" "DB_PASSWORD" "WP_TITLE" "DOMAIN_NAME" \
+VARIABLES=("DB_HOST" "DB_NAME" "DB_USER" "DB_PASSWORD" "DOMAIN_NAME" \
 	"WP_ADMIN_NAME" "WP_ADMIN_EMAIL" "WP_ADMIN_PASSWORD" "WP_USER_NAME" "WP_USER_EMAIL" \
 	"WP_USER_PASSWORD")
 
@@ -27,19 +34,16 @@ for VAR in "${VARIABLES[@]}"; do
 	fi
 done
 
-# Fix ownership issues (important)
-chown -R www-data:www-data /var/www/html
-chmod -R 755 /var/www/html
 
 # Wait for MariaDB to be ready
 TIMEOUT=60
 START_TIME=$(date +%s)
 
-while ! mariadb --host=$DB_HOST --user=$DB_USER --password="$(cat /run/secrets/db_user_password)" -e "SELECT 1" &>/dev/null; do
+while ! mariadb --host=$DB_HOST --user=$DB_USER --password="$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
 	sleep 5
-	ELAPSED=$(( $(date +%s) - START_TIME ))
-	if [ $ELAPSED -ge $TIMEOUT ]; then
-		echo "ERROR: MariaDB connection timed out"
+#	ELAPSED=$(( $(date +%s) - START_TIME ))
+	if [ $(( $(date +%s) - START_TIME )) -ge $TIMEOUT ]; then
+		echo -e "${RED}ERROR: MariaDB connection timed out${RESET}"
 		exit 1
 	fi
 done
@@ -59,9 +63,12 @@ fi
 if ! wp core is-installed --allow-root; then
 	echo "⚡ Installing WordPress..."
 	wp core install \
-		--url="https://kbolon.42.fr/blog" \
+		--url="https://$DOMAIN_NAME/blog" \
 		--title="$WP_TITLE" \
 		--admin_user="$WP_ADMIN_NAME" \
 		--admin_password="$WP_ADMIN_PASSWORD" \
 		--admin_email="$WP_ADMIN_EMAIL" \
-		--allow-root || { echo "ERROR: WordPress installati
+		--allow-root || { echo "ERROR: WordPress installation failed"; exit 1; }
+else
+	echo "WordPress already installed"
+fi

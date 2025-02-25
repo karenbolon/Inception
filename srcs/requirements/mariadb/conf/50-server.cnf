@@ -18,10 +18,10 @@
 #basedir                 = /usr
 #tmpdir                  = /tmp
 
-user                    = mysql
+user                    = root
 pid-file                = /run/mysqld/mysqld.pid
 datadir                 = /var/lib/mysql
-socket					= /run/mysqld/mysqld.sock
+socket					= /var/run/mysqld/mysqld.sock
 bind_address			= 0.0.0.0
 port					= 3306
 log_error				= /var/log/mariadb.log
@@ -34,7 +34,7 @@ syslog					= 1
 
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
-bind-address            = mariadb
+#bind-address            = mariadb
 
 #
 # * Fine Tuning

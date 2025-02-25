@@ -62,7 +62,7 @@ fi
 REQUIRED_VARS=(
 	"DOMAIN_NAME=kbolon.42.fr"
 	"DB_USER=kbolon"
-	"DB_NAME=database"
+	"DB_NAME=inception"
 	"DB_HOST=mariadb"
 	"WP_TITLE=inception"
 	"WP_ADMIN_NAME=kbolon"

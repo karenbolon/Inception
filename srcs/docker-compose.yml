@@ -18,6 +18,7 @@ services:
     restart: unless-stopped
     networks:
       inception:
+    #don't need extra_hosts in VM
     extra_hosts:
       - "kbolon.42.fr:127.0.0.1"
 
@@ -37,8 +38,8 @@ services:
       - ./database:/var/lib/mysql
     networks:
       inception:
-    ports:
-     - 3306:3306
+#    ports:
+#     - 3306:3306
 
   wordpress:
     build:
@@ -49,6 +50,8 @@ services:
       - wp_admin_password
       - wp_user_password
     restart: unless-stopped
+    depends_on:
+      - mariadb
     container_name: wordpress
     ports:
       - 9000:9000
@@ -62,16 +65,21 @@ services:
     networks:
       inception:
 
+
 #secrets are already loaded in docker swarm
 secrets:
+#  key:
+#    file: /Users/karenbolon/Documents/Inception/secrets/nginx.key
+#  cert:
+#    file: /Users/karenbolon/Documents/Inception/secrets/nginx.crt
   db_root_password:
-    file: ../secrets/db_root_password.txt
+    file: /Users/karenbolon/Documents/Inception/secrets/db_root_password.txt
   db_user_password:
-    file: ../secrets/db_user_password.txt
+    file: /Users/karenbolon/Documents/Inception/secrets/db_user_password.txt
   wp_admin_password:
-    file: ../secrets/wp_admin_password.txt
+    file: /Users/karenbolon/Documents/Inception/secrets/wp_admin_password.txt
   wp_user_password:
-    file: ../secrets/wp_user_password.txt
+    file: /Users/karenbolon/Documents/Inception/secrets/wp_user_password.txt
 
 networks:
   inception:
