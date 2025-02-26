@@ -18,3 +18,4 @@ RUN chmod +x /usr/local/bin/mariadb_script.sh
 ENTRYPOINT ["/usr/local/bin/mariadb_script.sh"]
 
 
+

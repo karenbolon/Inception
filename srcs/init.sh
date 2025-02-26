@@ -8,8 +8,8 @@ RESET='\033[0m' #'\e[0m'
 
 ENV_FILE="srcs/.env"
 
-SECRETS_DIR="/Users/karenbolon/Documents/Inception/secrets"
-#SECRETS_DIR="/home/kbolon/Documents/Inception/secrets"
+#SECRETS_DIR="/Users/karenbolon/Documents/Inception/secrets"
+SECRETS_DIR="/home/kbolon/Documents/Inception/secrets"
 
 #Function to generate a random password
 generate_password() {
@@ -39,11 +39,11 @@ make_directories() {
 
 make_directories "$SECRETS_DIR" 700
 #MACOS
-make_directories "/Users/karenbolon/data/mariadb"
-make_directories "/Users/karenbolon/data/wordpress"
+#make_directories "/Users/karenbolon/data/mariadb"
+#make_directories "/Users/karenbolon/data/wordpress"
 #LINUX:
-#make_directories "/home/kbolon/data/mariadb"
-#make_directories "/home/kbolon/data/wordpress"
+make_directories "/home/kbolon/data/mariadb"
+make_directories "/home/kbolon/data/wordpress"
 
 generate_password "$SECRETS_DIR/wp_user_password.txt"
 generate_password "$SECRETS_DIR/wp_admin_password.txt"

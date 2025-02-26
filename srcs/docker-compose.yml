@@ -1,58 +1,60 @@
 services:
   nginx:
     build:
-      context: /Users/karenbolon/Documents/Inception
+#      context: /Users/karenbolon/Documents/Inception
+      context: /home/kbolon/Documents/Inception
       dockerfile: srcs/requirements/nginx/Dockerfile
     env_file: .env
     container_name: nginx
-#    secrets:
-#      - key
-#      - cert
+    secrets:
+      - key
+      - cert
     depends_on:
       - wordpress
       - mariadb
     ports:
-      - 443:443
+#      - 443:443 this doesn't work at school but might in VM
+      - 8443:443
     volumes:
-      - ./web:/var/www/html
+      - /home/kbolon/data/nginx:/var/www/html
     restart: unless-stopped
     networks:
       inception:
     #don't need extra_hosts in VM
-    extra_hosts:
-      - "kbolon.42.fr:127.0.0.1"
+#    extra_hosts:
+#      - "kbolon.42.fr:127.0.0.1"
 
   mariadb:
+    container_name: mariadb
     build:
       context: ./requirements/mariadb
     secrets:
-      - db_user_password
       - db_root_password
+      - db_user_password
     restart: unless-stopped
-    container_name: mariadb
     env_file: .env
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
-      MYSQL_PASSWORD_FILE: /run/secrets/db_user_password
+      DB_ROOT_PASSWORD: /run/secrets/db_root_password
+      DB_USER_PASSWORD: /run/secrets/db_user_password
     volumes:
-      - ./database:/var/lib/mysql
+      - /home/kbolon/data/mariadb:/var/lib/mysql
     networks:
       inception:
-#    ports:
-#     - 3306:3306
+    ports:
+     - 3306:3306
 
   wordpress:
+    container_name: wordpress
     build:
       context: ./requirements/wordpress
+    depends_on:
+      - mariadb
     secrets:
       - db_user_password
       - db_root_password
       - wp_admin_password
       - wp_user_password
     restart: unless-stopped
-    depends_on:
-      - mariadb
-    container_name: wordpress
     ports:
       - 9000:9000
     env_file: .env
@@ -61,25 +63,24 @@ services:
       WP_ADMIN_PASSWORD: /run/secrets/wp_admin_password
       WP_USER_PASSWORD: /run/secrets/wp_user_password
     volumes:
-      - ./web:/var/www/html
+      - /home/kbolon/data/wordpress:/var/www/html
     networks:
       inception:
 
-
 #secrets are already loaded in docker swarm
 secrets:
-#  key:
-#    file: /Users/karenbolon/Documents/Inception/secrets/nginx.key
-#  cert:
-#    file: /Users/karenbolon/Documents/Inception/secrets/nginx.crt
+  key:
+    file: ../secrets/nginx.key
+  cert:
+    file: ../secrets/nginx.crt
   db_root_password:
-    file: /Users/karenbolon/Documents/Inception/secrets/db_root_password.txt
+    file: ../secrets/db_root_password.txt
   db_user_password:
-    file: /Users/karenbolon/Documents/Inception/secrets/db_user_password.txt
+    file: ../secrets/db_user_password.txt
   wp_admin_password:
-    file: /Users/karenbolon/Documents/Inception/secrets/wp_admin_password.txt
+    file: ../secrets/wp_admin_password.txt
   wp_user_password:
-    file: /Users/karenbolon/Documents/Inception/secrets/wp_user_password.txt
+    file: ../secrets/wp_user_password.txt
 
 networks:
   inception:

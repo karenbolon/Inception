@@ -1,18 +1,31 @@
 FROM debian:bullseye
 
-RUN mkdir -p /var/www/wordpress
+# Create WordPress directory
+RUN mkdir -p /var/www/html
 
-#install nginx and openssl for TLS
+# Install required packages
 RUN apt update && apt upgrade -y && \
-	apt install -y php-fpm php-mysql curl mariadb-client && \
-	rm -rf /var/lib/apt/lists/*
+    apt install -y php-fpm php-mysql curl mariadb-client && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY ./tools/wp_script.sh /usr/local/bin/
+# Install wp-cli
+RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+    chmod +x wp-cli.phar && \
+    mv wp-cli.phar /usr/local/bin/wp
 
-RUN chmod +x /usr/local/bin/wp_script.sh
-#COPY ./tools/wp-config.php /
+# Download and extract WordPress core files
+RUN wp core download --path=/var/www/html --allow-root
 
-#for TLS use port 443 and 80
-#EXPOSE 9000
+# Copy WordPress setup script
+COPY ./tools/wp_script2.sh /usr/local/bin/wp_script2.sh
+RUN chmod +x /usr/local/bin/wp_script2.sh
 
-ENTRYPOINT ["/usr/local/bin/wp_script.sh"]
+# Copy wp-config.php file into the correct directory
+COPY ./conf/wp-config.php /var/www/html/wp-config.php
+RUN chmod 644 /var/www/html/wp-config.php && chown www-data:www-data /var/www/html/wp-config.php
+
+# Expose PHP-FPM port
+EXPOSE 9000
+
+# Start WordPress initialization
+ENTRYPOINT ["/usr/local/bin/wp_script2.sh"]

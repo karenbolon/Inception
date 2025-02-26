@@ -1,0 +1,16 @@
+FROM debian:bullseye
+
+RUN mkdir -p /var/www/wordpress
+
+#mariadc-client allows wordpress to connect to mariadb
+RUN apt update && apt upgrade -y && \
+	apt install -y php-fpm php-mysql curl mariadb-client && \
+	rm -rf /var/lib/apt/lists/*
+
+COPY ./tools/wp_script2.sh /usr/local/bin/wp_script2.sh
+
+RUN chmod +x /usr/local/bin/wp_script2.sh
+
+EXPOSE 9000
+
+ENTRYPOINT ["/usr/local/bin/wp_script2.sh"]

@@ -3,7 +3,7 @@
 RED='\033[31m' #'\e[31m'
 RESET='\033[0m' #'\e[0m'
 
-# Ensure wp-cli is installed
+# Ensure wp-cli is installed, this executes admin tasks via the terminal
 if ! command -v wp &>/dev/null; then
 	curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar || { echo "ERROR: wp-cli download failed"; exit 1; }
 	chmod +x wp-cli.phar
@@ -18,9 +18,9 @@ chown -R www-data:www-data /var/www/html
 chmod -R 755 /var/www/html
 
 # Read secrets from files
-DB_PASSWORD=$(cat /run/secrets/db_user_password)
-WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
-WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password)
+#DB_PASSWORD=$(cat /run/secrets/db_user_password)
+#WP_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
+#WP_USER_PASSWORD=$(cat /run/secrets/wp_user_password)
 
 # Validate required environment variables
 VARIABLES=("DB_HOST" "DB_NAME" "DB_USER" "DB_PASSWORD" "DOMAIN_NAME" \
@@ -39,9 +39,8 @@ done
 TIMEOUT=60
 START_TIME=$(date +%s)
 
-while ! mariadb --host=$DB_HOST --user=$DB_USER --password="$DB_PASSWORD" -e "SELECT 1" &>/dev/null; do
+while ! mysqladmin ping -h "$DB_HOST" ; do
 	sleep 5
-#	ELAPSED=$(( $(date +%s) - START_TIME ))
 	if [ $(( $(date +%s) - START_TIME )) -ge $TIMEOUT ]; then
 		echo -e "${RED}ERROR: MariaDB connection timed out${RESET}"
 		exit 1

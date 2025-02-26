@@ -1,57 +1,55 @@
 #!/bin/bash
 
-RED='\033[31m' #'\e[31m'
-RESET='\033[0m' #'\e[0m'
+RED='\033[31m'
+RESET='\033[0m'
 
-LOG_FILE="/var/log/mariadb.log"
-DB_DATA_DIR="/var/lib/mysql"
-DB_ROOT_PASSWORD="$(cat /run/secrets/db_root_password)"
-DB_USER_PASSWORD="$(cat /run/secrets/db_user_password)"
-DB_NAME="inception"
-DB_USER="kbolon"
+# Read database password from Docker secrets
+DB_USER_PASSWORD=$(cat /run/secrets/db_user_password)
 
-#check if socket directory exists with correct permissions
-#setup_socket() {
-echo "Setting up MySQL socket directory"
-mkdir -p /run/mysqld/
-chown -R mysql:mysql /run/mysqld/
-chmod 755 /run/mysqld/
-#}
+# Ensure MariaDB directories exist with correct permissions
+mkdir -p /run/mysqld /var/lib/mysql /var/log/mariadb
+chown -R mysql:mysql /run/mysqld/ /var/lib/mysql /var/log/mariadb
+chmod 755 /run/mysqld /var/lib/mysql /var/log/mariadb
 
-#set log file for mariadb
-#setup_logging() {
-echo "Setting up log files for mariadb"
-touch "$LOG_FILE"
-chmod 644 "$LOG_FILE"
-chown mysql:mysql "$LOG_FILE"
-#}
+# Initialize database if missing
+if [ ! -d "/var/lib/mysql/mysql" ]; then
+    echo "Initializing MariaDB database..."
+    mariadb-install-db --user=mysql --datadir=/var/lib/mysql > /dev/null
+fi
 
-#start mariadb in background
-echo "Starting Mariadb"
-mysqld_safe --datadir="$DB_DATA_DIR" > "$LOG_FILE" 2>&1 &
+# Start MariaDB in foreground
+echo "Starting MariaDB..."
+exec mariadbd --datadir=/var/lib/mysql &
 
+# Wait for MariaDB to be ready
+echo "Waiting for MariaDB to start..."
 TIMEOUT=60
 START_TIME=$(date +%s)
-while ! mysqladmin ping -uroot -p"$DB_ROOT_PASSWORD" --silent; do
-	if [ $(( $(date +%s) - START_TIME)) -gt $TIMEOUT ]; then
-		echo -e "${RED}Error: Mariadb timed out${RESET}"
-		exit 1
-	fi
-	sleep 2
+
+while ! mysqladmin ping -h 127.0.0.1 --silent; do
+    sleep 2
+    if [ $(( $(date +%s) - START_TIME )) -gt $TIMEOUT ]; then
+        echo -e "${RED}ERROR: MariaDB failed to start${RESET}"
+        exit 1
+    fi
 done
+echo "MariaDB is ready!"
 
-echo "Mariadb started"
+# Check if the database exists inside MariaDB
+if ! mariadb -uroot -e "USE $DB_NAME;" 2>/dev/null; then
+    echo "Creating Database and User..."
+    
+    mariadb -uroot <<EOF
+    CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;
+    CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_USER_PASSWORD';
+    GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';
+    FLUSH PRIVILEGES;
+EOF
 
-#initialise DB if it doesn't exist
-#-e: execute
-DB_EXISTS=$(mysql -uroot -p"$DB_ROOT_PASSWORD" -e "SHOW DATABASES LIKE '$DB_NAME'" | grep -q "$DB_NAME"; echo $?)
-if [ "$DB_EXISTS" -eq 1 ]; then
-	echo "Creating Database and User"
-	mysql -uroot -p"$DB_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS \`$DB_NAME\`;" # || { echo 'Failed to initialize database.' >> /var/log/mariadb_env_vars.log; exit 1; }
-	mysql -uroot -p"$DB_ROOT_PASSWORD" -e "CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_USER_PASSWORD';" #||  { echo 'Failed to create user' >> /var/log/mariadb_env_vars.log; exit 1; }
-	mysql -uroot -p"$DB_ROOT_PASSWORD" -e "GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'%';" # || { echo 'Failed to grant privileges.' >> /var/log/mariadb_env_vars.log; exit 1; }
-	mysql -uroot -p"$DB_ROOT_PASSWORD" -e "FLUSH PRIVILEGES;" #||  { echo 'Failed to initialize database.' >> /var/log/mariadb_env_vars.log; exit 1; }
-	echo "Database and user created successfully."
+    echo "Database and user created successfully."
 else
-	echo "DB and user already created"
+    echo "Database and user already exist."
 fi
+
+# Keep MariaDB running in foreground
+exec mariadbd --datadir=/var/lib/mysql

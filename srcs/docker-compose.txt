@@ -1,0 +1,37 @@
+services:
+  mariadb:
+    container_name: mariadb
+    build:
+      context: ./requirements/mariadb
+    secrets:
+      - db_root_password
+      - db_user_password
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_ROOT_PASSWORD: /run/secrets/db_root_password
+#      DB_ROOT_PASSWORD: 123456
+      DB_USER_PASSWORD: /run/secrets/db_user_password
+    volumes:
+      - /home/kbolon/data/mariadb:/var/lib/mysql
+    networks:
+      inception:
+    ports:
+     - 3306:3306
+
+networks:
+  inception:
+    driver: bridge
+
+secrets:
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  db_user_password:
+    file: ../secrets/db_user_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
+
+
+

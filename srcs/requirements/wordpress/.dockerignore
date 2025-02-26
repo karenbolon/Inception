@@ -9,7 +9,6 @@ env
 .git/
 .gitignore
 .dockerignore
-docker-compose.override.yml
 
 #ignore secrets
 *.env
