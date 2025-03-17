@@ -1,0 +1,31 @@
+
+# this is read by the standalone daemon and embedded servers
+[server]
+
+
+# this is only for the mysqld standalone daemon
+[mysqld]
+
+
+user					= mysql
+datadir					= /var/lib/mysql
+basedir					= /usr
+tmpdir                  = /tmp
+pid-file				= /run/mysqld/mysqld.pid
+socket					= /run/mysqld/mysqld.sock
+port					= 3306
+log_error				= /var/log/mysql/mariadb.log
+
+#these help avoid encoding issues in wordpress
+character-set-server    = utf8mb4
+collation-server        = utf8mb4_general_ci
+
+
+#basic security settings
+bind_address			= 0.0.0.0
+
+
+
+
+
+
