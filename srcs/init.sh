@@ -8,7 +8,8 @@ RESET='\033[0m'
 
 ENV_FILE="srcs/.env"
 
-SECRETS_DIR="$HOME_PATH/Documents/Inception/secrets"
+HOME_DIR="/home/ubuntu"
+SECRETS_DIR="$HOME_DIR/Documents/Inception/secrets"
 
 #Function to generate a random password
 generate_password() {
@@ -17,7 +18,7 @@ generate_password() {
 		openssl rand -base64 8 > "$flag"
 		echo -e "${GREEN}$flag created${RESET}"
 	else
-		echo -e "${RED}$flag already exists${RESET}"
+		echo -e "${BLUE}$flag already exists${RESET}"
 	fi
 }
 
@@ -29,53 +30,43 @@ make_directories() {
 	if [ ! -d "$path" ]; then
 		mkdir -p "$path"
 		[ -n "$permissions" ] && chmod "0$permissions" "$path"
-		chown -R kbolon:kbolon "$path"
+		chmod -R "$permissions" "$path"
 		echo -e "${GREEN}$path: created${RESET}"
 	else
-		echo -e "${RED}$path already exists${RESET}"
-		chown -R kbolon:kbolon "$path"
+		echo -e "${BLUE}$path already exists${RESET}"
+		chmod -R "$permissions"  "$path"
 	fi
 }
 
 make_directories "$SECRETS_DIR" 700
-make_directories "$HOME_PATH/data/mariadb"
-make_directories "$HOME_PATH/data/wordpress"
+make_directories "$HOME_DIR/data/mariadb_data" 777
+#sudo chown -R 999:999 "$HOME_DIR/data/mariadb_data"
+make_directories "$HOME_DIR/data/wordpress_data" 775
+#sudo chown -R 1000:1000 "$HOME_DIR/data/wordpress_data"
 
 generate_password "$SECRETS_DIR/wp_user_pw.txt"
 generate_password "$SECRETS_DIR/wp_admin_pw.txt"
 generate_password "$SECRETS_DIR/mdb_pw.txt"
 generate_password "$SECRETS_DIR/mdb_root_pw.txt"
 
-#create ssl certificates if not created
-if [ ! -f "$SECRETS_DIR/nginx.crt" ] || [ ! -f "$SECRETS_DIR/nginx.key" ]; then
-	openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-		-keyout $SECRETS_DIR/nginx.key -out $SECRETS_DIR/nginx.crt \
-		-subj "/CN=${DOMAIN}"
-	openssl x509 -in $SECRETS_DIR/nginx.crt -addtrust serverAuth -out $SECRETS_DIR/nginx.crt
-	echo -e "${GREEN}SSL certificates created${RESET}"
-else
-	echo -e "${RED}SSL certificates already created${RESET}"
-fi
-
 REQUIRED_VARS=(
-	"USER_NAME=kbolon"
 	"DOMAIN_NAME=kbolon.42.fr"
 	"MDB_USER=kbolon"
-	"MDB_DB_NAME=database"
+	"MDB_DB_NAME=wordpress"
 	"WP_TITLE=inception"
 	"WP_ADMIN_NAME=kbolon"
 	"WP_ADMIN_EMAIL=kbolon@gmail.com"
 	"WP_USER_NAME=user"
 	"WP_USER_EMAIL=user@gmail.com"
 	"WP_USER_ROLE=author"
-	"HOME_PATH=/Users/karenbolon"
+	"DB_HOST=mariadb"
 )
 
 #create .env if it doesn't exist
 if [ ! -f "$ENV_FILE" ]; then
 	#write a heredoc to save everything to .env
 	echo -e "${BLUE}Creating .env file${RESET}"
-	tough "$ENV_FILE"
+	touch "$ENV_FILE"
 fi
 
 #check if each required variable exists and adds if missing
@@ -92,3 +83,18 @@ done
 
 echo -e "${GREEN}Environment file has been checked/created!${RESET}"
 
+#export the items in .env file to be used in making SSL keys etc
+# '^#' this ignores lines beginning with #
+#xargs lines into a format export can use
+export $(grep -v '^#' $ENV_FILE | xargs)
+
+#create ssl certificates if not created
+if [ ! -f "$SECRETS_DIR/nginx.crt" ] || [ ! -f "$SECRETS_DIR/nginx.key" ]; then
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+		-keyout $SECRETS_DIR/nginx.key -out $SECRETS_DIR/nginx.crt \
+		-subj "/CN=${DOMAIN_NAME}"
+	openssl x509 -in $SECRETS_DIR/nginx.crt -addtrust serverAuth -out $SECRETS_DIR/nginx.crt
+	echo -e "${GREEN}SSL certificates created${RESET}"
+else
+	echo -e "${BLUE}SSL certificates already created${RESET}"
+fi

@@ -10,20 +10,6 @@ mkdir -p /run/php/
 chown www-data:www-data /run/php
 chmod 755 /run/php
 
-if [ ! -f "/var/www/html/wp-config.php" ]; then
-	echo "[### WP-CONFIG.PHP NOT FOUND, CREATING... ###]"
-	if ! su - www-data -s /bin/sh -c "wp config create \
-		--dbname='$MDB_DB_NAME' \
-		--dbuser='$MDB_USER' \
-		--dbpass='$(cat /run/secrets/mdb_pw)' \
-#		--dbhost='mariadb:3306' \
-		--dbhost='$DB_HOST' \
-		--path=$WP_PATH"; then
-		echo "[### ERROR CREATING WP_CONFIG.PHP ###]"
-		exit 1
-	fi
-fi
-
 
 echo "[### CHECKING MARIADB STATUS ###]"
 until mysqladmin ping -h"$DB_HOST" --silent; do
@@ -31,34 +17,6 @@ until mysqladmin ping -h"$DB_HOST" --silent; do
 	sleep 5
 done
 echo "[### MARIADB IS UP AND RUNNING ###]"
-
-#give mariadb time to set up
-#sleep 10
-
-#Wait for MariaDB server to be running
-#end_time=$(( SECONDS + 30 ))
-#while (( SECONDS < end_time )); do
-#	if nc -zq 1 mariadb 3306; then
-#		echo "[### MARIADB IS UP AND RUNNING ###]"
-#		break
-#	else
-#		echo "[### WAITING FOR MARIADB TO START ###]"
-#		sleep 5
-#	fi
-#done
-
-#if (( SECONDS >= end_time )); then
-#	echo "[### ERROR: MARIADB IS NOT RESPONDING! ###]"
-#	exit 1
-#fi
-
-#Install wp-cli if missing
-if ! command -v wp &>/dev/null; then
-	echo "[### INSTALLING WP_CLI ###]"
-    curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-    chmod +x wp-cli.phar
-    mv wp-cli.phar /usr/local/bin/wp
-fi
 
 #Download wordpress if missing
 if [ ! -f "$WP_PATH/wp-settings.php" ]; then
@@ -68,11 +26,25 @@ else
 	echo "[### WORDPRESS ALREADY DOWNLOADED ###]"
 fi
 
+#create wp-config.php if missing
+if [ ! -f "$WP_PATH/wp-config.php" ]; then
+	echo "[### WP-CONFIG.PHP NOT FOUND, CREATING... ###]"
+	if ! su - www-data -s /bin/sh -c "wp config create \
+		--dbname='$MDB_DB_NAME' \
+		--dbuser='$MDB_USER' \
+		--dbpass='$(cat /run/secrets/mdb_pw)' \
+		--dbhost='$DB_HOST' \
+		--path=$WP_PATH"; then
+		echo "[### ERROR CREATING WP_CONFIG.PHP ###]"
+		exit 1
+	fi
+fi
+
 # Check if WordPress is installed, otherwise install
 if ! wp --allow-root --path="$WP_PATH" core is-installed; then
     echo "[### INSTALLING WORDPRESS ###]"
     wp --allow-root --path="$WP_PATH" core install \
-        --url="https://$DOMAIN_NAME/blog" \
+        --url="https://$DOMAIN_NAME" \
         --title="$WP_TITLE" \
         --admin_user="$WP_ADMIN_NAME" \
         --admin_password="$(cat /run/secrets/wp_admin_pw)" \
@@ -93,18 +65,12 @@ else
 fi
 
 #install and activate theme
-if ! wp --allow-root --path="$WP_PATH" theme is-installed raft; then
-	echo "[### INSTALLING THEME: RAFT ###]"
-	wp --allow-root --path="$WP_PATH" theme install raft --activate
-else
-	echo "[### THEME ALREADY INSTALLED ###]"
-fi
-
-#restart PHP-FPM
-#service php7.4-fpm restart
-
-# Start PHP-FPM service in the foreground to keep the container running
-
+#if ! wp --allow-root --path="$WP_PATH" theme is-installed raft; then
+#	echo "[### INSTALLING THEME: RAFT ###]"
+#	wp --allow-root --path="$WP_PATH" theme install raft --activate
+#else
+#	echo "[### THEME ALREADY INSTALLED ###]"
+#fi
 
 if pgrep -x "php-fpm7.4" > /dev/null; then
 	echo "[### PHP-FPM IS ALREADY RUNNING ###]"

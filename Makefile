@@ -1,5 +1,6 @@
-SECRETS_DIR = /Users/karenbolon/Documents/Inception/secrets
-DATA_DIR = /Users/karenbolon/data
+#HOME_DIR = "/home/ubuntu"
+#SECRETS_DIR = "$(HOME_DIR)/Documents/Inception/secrets"
+#DATA_DIR = "$(HOME_DIR)/Documents/Inception/data"
 
 COMPOSE_FILE = srcs/docker-compose.yml
 INIT_SCRIPT = ./srcs/init.sh
@@ -9,7 +10,7 @@ all: init up
 
 init:
 	@echo "Creating .env file"
-	@bash $(INIT_SCRIPT)
+	@/bin/bash $(INIT_SCRIPT)
 
 #DOCKER COMPOSE
 up:

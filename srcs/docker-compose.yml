@@ -12,7 +12,7 @@ services:
     ports:
       - 443:443
     volumes:
-      - ${HOME_PATH}/data/wordpress:/var/www/html
+      - wordpress_data:/var/www/html
     restart: unless-stopped
     networks:
       inception:
@@ -30,7 +30,7 @@ services:
       MDB_PW: /run/secrets/mdb_pw
       MDB_ROOT_PW: /run/secrets/mdb_root_pw
     volumes:
-      - ${HOME_PATH}/data/mariadb:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
     networks:
       inception:
     ports:
@@ -54,25 +54,41 @@ services:
       MDB_PW: /run/secrets/mdb_pw
       WP_ADMIN_PW: /run/secrets/wp_admin_pw
       WP_USER_PW: /run/secrets/wp_user_pw
+      WP_ADMIN_NAME: ${MDB_USER}
+      WP_USER_NAME: ${WP_USER_NAME}
     volumes:
-      - ${HOME_PATH}/data/wordpress:/var/www/html
+      - wordpress_data:/var/www/html
     networks:
       inception:
 
 secrets:
   key:
-    file: ${HOME_PATH}/Documents/Inception/secrets/nginx.key
+    file: /home/ubuntu/Documents/Inception/secrets/nginx.key
   crt:
-    file: ${HOME_PATH}/Documents/Inception/secrets/nginx.crt
+    file: /home/ubuntu/Documents/Inception/secrets/nginx.crt
   mdb_pw:
-    file: ${HOME_PATH}/Documents/Inception/secrets/mdb_pw.txt
+    file: /home/ubuntu/Documents/Inception/secrets/mdb_pw.txt
   mdb_root_pw:
-    file: ${HOME_PATH}/Documents/Inception/secrets/mdb_root_pw.txt
+    file: /home/ubuntu/Documents/Inception/secrets/mdb_root_pw.txt
   wp_admin_pw:
-    file: ${HOME_PATH}/Documents/Inception/secrets/wp_admin_pw.txt
+    file: /home/ubuntu/Documents/Inception/secrets/wp_admin_pw.txt
   wp_user_pw:
-    file: ${HOME_PATH}/Documents/Inception/secrets/wp_user_pw.txt
+    file: /home/ubuntu/Documents/Inception/secrets/wp_user_pw.txt
 
 networks:
   inception:
     driver: bridge
+
+volumes:
+  mariadb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ubuntu/data/mariadb_data
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/ubuntu/data/wordpress_data
