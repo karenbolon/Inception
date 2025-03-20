@@ -1,0 +1,5 @@
+/secrets/
+secrets/
+.env
+.DS_Store
+.vscode/.env
