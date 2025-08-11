@@ -9,7 +9,7 @@ NGINX vhost + TLS termination → PHP-FPM; WordPress bootstrap + DB initializati
 
 Bind-mounted volumes for durability and idempotent setup scripts (wp-cli, init SQL).
 
-Key challenges & learnings
+## Key challenges & learnings
 
 Ordering/health of dependent services (DB → app), and permissions on mounted volumes.
 
