@@ -1,7 +1,7 @@
 # Inception — Containerized Web Stack
 I built a production-style web stack using Docker and Docker Compose: NGINX as reverse proxy, WordPress (PHP-FPM) as the app, and MariaDB as the database. Each service runs from a custom Dockerfile, isolated on a private network with persistent volumes for data. Configuration is environment-driven, startup is automated, and the stack supports local TLS, health checks, and least-privilege defaults. The goal was to practice containerization, service orchestration, and basic hardening while keeping the setup reproducible across machines/VMs.
 
-What I implemented
+## What I implemented
 
 Compose topology, custom images, and a Makefile for one-command lifecycle.
 
